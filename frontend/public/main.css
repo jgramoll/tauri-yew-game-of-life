@@ -1,9 +1,38 @@
 body {
-    margin: 20px;
+    margin: 1em;
     background: #2d2d2d;
     color: white;
 }
 
-.heading {
-    text-align: center;
+table {
+    user-select: none; /* supported by Chrome and Opera */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+}
+
+.cell {
+    cursor: pointer;
+}
+
+.cell-live {
+    color: rgb(89, 228, 89);
+    border: 0.1em solid rgb(89, 228, 89);
+}
+
+.cell-dead {
+    color: rgb(207, 59, 59);
+    border: 0.1em solid rgb(207, 59, 59);
+}
+
+.game-buttons {
+    margin: 1em 0em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-button {
+    margin: 0 1em;
 }

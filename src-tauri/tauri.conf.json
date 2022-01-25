@@ -55,8 +55,8 @@
     "windows": [
       {
         "title": "Game of Life",
-        "width": 800,
-        "height": 600,
+        "width": 1080,
+        "height": 720,
         "resizable": true,
         "fullscreen": false
       }
