@@ -1,14 +1,17 @@
 use gloo_console as console;
 use gloo_timers::callback::Interval;
 use rand::Rng;
+use wasm_bindgen::JsCast;
+use wasm_bindgen::UnwrapThrowExt;
 use wasm_bindgen_futures::spawn_local;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::bindings;
 use crate::cell;
 
-const ROWS: usize = 30;
-const COLUMNS: usize = 65;
+const DEFAULT_ROWS: usize = 30;
+const DEFAULT_COLUMNS: usize = 65;
 const INTERVAL_MS: u32 = 200;
 
 pub enum Msg {
@@ -19,11 +22,15 @@ pub enum Msg {
     Stop,
     Reset,
     Tick,
+    ChangeRow(InputEvent),
+    ChangeCol(InputEvent),
 }
 
 pub struct App {
     active: bool,
     cells: Vec<bool>,
+    row_count: usize,
+    col_count: usize,
     _interval: Interval,
 }
 
@@ -44,16 +51,14 @@ impl App {
     }
 
     fn reset(&mut self) {
-        for cell in self.cells.iter_mut() {
-            *cell = false;
-        }
+        self.cells = vec![false; self.row_count * self.col_count];
     }
 
     fn step(&mut self) {
         let mut new_cells = self.cells.clone();
 
-        for row in 0..ROWS {
-            for col in 0..COLUMNS {
+        for row in 0..self.row_count {
+            for col in 0..self.col_count {
                 let live_count = self.alive_neighbors(row, col);
 
                 let current_idx = self.row_col_as_idx(row, col);
@@ -112,7 +117,7 @@ impl App {
     }
 
     fn row_col_as_idx(&self, row: usize, col: usize) -> usize {
-        row * COLUMNS + col
+        row * self.col_count + col
     }
 }
 
@@ -126,7 +131,9 @@ impl Component for App {
 
         Self {
             active: false,
-            cells: vec![false; ROWS * COLUMNS],
+            cells: vec![false; DEFAULT_ROWS * DEFAULT_COLUMNS],
+            row_count: 30,
+            col_count: 65,
             _interval,
         }
     }
@@ -165,13 +172,25 @@ impl Component for App {
                     false
                 }
             }
+            Msg::ChangeRow(e) => {
+                let target: HtmlInputElement = e.target().unwrap_throw().dyn_into().unwrap_throw();
+                self.row_count = target.value().parse().unwrap_throw();
+                self.reset();
+                true
+            }
+            Msg::ChangeCol(e) => {
+                let target: HtmlInputElement = e.target().unwrap_throw().dyn_into().unwrap_throw();
+                self.col_count = target.value().parse().unwrap_throw();
+                self.reset();
+                true
+            }
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let new_rows = self
             .cells
-            .chunks(COLUMNS)
+            .chunks(self.col_count)
             .enumerate()
             .map(|(row, cell_values)| {
                 let cells = cell_values.iter().enumerate().map(|(col, &active)| {
@@ -192,12 +211,18 @@ impl Component for App {
                 <table>
                     { for new_rows }
                 </table>
-                <div class={"game-buttons"}>
-                    <button class={"game-button"} onclick={ctx.link().callback(|_| Msg::Random)}> { "Random" } </button>
-                    <button class={"game-button"} onclick={ctx.link().callback(|_| Msg::Step)}> { "Step" } </button>
-                    <button class={"game-button"} onclick={ctx.link().callback(|_| Msg::Start)}> { "Start" } </button>
-                    <button class={"game-button"} onclick={ctx.link().callback(|_| Msg::Stop)}> { "Stop" } </button>
-                    <button class={"game-button"} onclick={ctx.link().callback(|_| Msg::Reset)}> { "Reset" } </button>
+                <div class="game-buttons">
+                    <button class="game-button" onclick={ctx.link().callback(|_| Msg::Random)}> { "Random" } </button>
+                    <button class="game-button" onclick={ctx.link().callback(|_| Msg::Step)}> { "Step" } </button>
+                    <button class="game-button" onclick={ctx.link().callback(|_| Msg::Start)}> { "Start" } </button>
+                    <button class="game-button" onclick={ctx.link().callback(|_| Msg::Stop)}> { "Stop" } </button>
+                    <button class="game-button" onclick={ctx.link().callback(|_| Msg::Reset)}> { "Reset" } </button>
+                </div>
+                <div class="game-buttons">
+                    <label for="rows">{"Rows"}</label>
+                    <input id="rows" type="number" value={self.row_count.to_string()} oninput={ctx.link().callback(Msg::ChangeRow)} />
+                    <label for="columns">{"Columns"}</label>
+                    <input id="columns" type="number" value={self.col_count.to_string()} oninput={ctx.link().callback(Msg::ChangeCol)} />
                 </div>
             </div>
         }
