@@ -1,5 +1,3 @@
-use std::mem;
-
 use gloo_console as console;
 use gloo_timers::callback::Interval;
 use rand::Rng;
@@ -9,7 +7,7 @@ use yew::prelude::*;
 use crate::bindings;
 use crate::cell;
 
-const ROWS: usize = 25;
+const ROWS: usize = 30;
 const COLUMNS: usize = 65;
 const INTERVAL_MS: u32 = 200;
 

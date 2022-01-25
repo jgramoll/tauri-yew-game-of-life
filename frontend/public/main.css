@@ -14,15 +14,17 @@ table {
 
 .cell {
     cursor: pointer;
+    width: 1em;
+    height: 0.8em;
 }
 
 .cell-live {
-    color: rgb(89, 228, 89);
+    background-color: rgb(89, 228, 89);
     border: 0.1em solid rgb(89, 228, 89);
 }
 
 .cell-dead {
-    color: rgb(207, 59, 59);
+    background-color: rgb(207, 59, 59);
     border: 0.1em solid rgb(207, 59, 59);
 }
 

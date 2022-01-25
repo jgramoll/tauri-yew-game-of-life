@@ -44,9 +44,7 @@ impl Component for CellComponent {
             <td
                 class={classes!("cell", cell_status)}
                 {onclick}
-            >
-                { if active { 1 } else { 0 } }
-            </td>
+            />
         }
     }
 }
