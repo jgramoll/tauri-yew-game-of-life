@@ -1,0 +1,87 @@
+name: Rust
+
+on: push
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.platform }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest]
+        # platform: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: install webkit2gtk (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-latest'
+
+      - name: Get current date
+        if: matrix.platform == 'windows-latest'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.platform }}-stable-cargo-registry-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.platform }}-stable-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+            ${{ matrix.platform }}-stable-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.platform }}-stable-cargo-index-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.platform }}-stable-cargo-index-${{ hashFiles('**/Cargo.toml') }}
+            ${{ matrix.platform }}-stable-cargo-index-
+
+      - name: Cache core cargo target
+        uses: actions/cache@v2
+        with:
+          path: target
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.platform }}-stable-cargo-core-${{ hashFiles('core/**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.platform }}-stable-cargo-core-${{ hashFiles('core/**/Cargo.toml') }}
+            ${{ matrix.platform }}-stable-cargo-core-
+
+      - name: Install wasm rust target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install Trunk
+        run: cargo install --locked trunk
+
+      - name: Install Tauri
+        run: cargo install tauri-cli --git https://github.com/tauri-apps/tauri --branch next
+
+      - name: Build
+        run: cargo tauri build
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ./target/release/bundle/deb/game-of-life-app_0.1.0_amd64.deb
+            ./target/release/bundle/appimage/game-of-life-app_0.1.0_amd64.AppImage

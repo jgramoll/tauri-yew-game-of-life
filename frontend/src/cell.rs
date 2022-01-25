@@ -1,9 +1,5 @@
 use yew::{prelude::*, MouseEvent};
 
-pub enum Msg {
-    Click(MouseEvent),
-}
-
 #[derive(PartialEq, Properties)]
 pub struct Props {
     pub active: bool,
@@ -12,37 +8,25 @@ pub struct Props {
 
 pub struct CellComponent;
 
+fn cell_class(active: bool) -> Classes {
+    let cell_status = if active { "cell-live" } else { "cell-dead" };
+    classes!("cell", cell_status)
+}
+
 impl Component for CellComponent {
-    type Message = Msg;
+    type Message = ();
     type Properties = Props;
 
     fn create(_ctx: &Context<Self>) -> Self {
         CellComponent
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::Click(m) => {
-                ctx.props().onclick.emit(m);
-                false
-            }
-        }
-    }
-
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let active = ctx.props().active;
-        let cell_status = {
-            if active {
-                "cell-live"
-            } else {
-                "cell-dead"
-            }
-        };
-
-        let onclick = ctx.link().callback(Msg::Click);
+        let onclick = ctx.props().onclick.clone();
+        let class = cell_class(ctx.props().active);
         html! {
             <td
-                class={classes!("cell", cell_status)}
+                {class}
                 {onclick}
             />
         }
