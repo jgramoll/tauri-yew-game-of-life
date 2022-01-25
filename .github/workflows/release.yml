@@ -12,8 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest]
-        # platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout repository
@@ -78,10 +77,22 @@ jobs:
       - name: Build
         run: cargo tauri build
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+      - uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.platform == 'ubuntu-latest'
         with:
           files: |
-            ./target/release/bundle/deb/game-of-life-app_0.1.0_amd64.deb
-            ./target/release/bundle/appimage/game-of-life-app_0.1.0_amd64.AppImage
+            ./target/release/bundle/deb/game-of-life-app_*_amd64.deb
+            ./target/release/bundle/appimage/game-of-life-app_*_amd64.AppImage
+
+      - uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.platform == 'macos-latest'
+        with:
+          files: |
+            ./target/release/bundle/macos/game-of-life-app.app
+            ./target/release/bundle/dmg/game-of-life-app_*_x64.dmg
+
+      - uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.platform == 'windows-latest'
+        with:
+          files: |
+            ./target\release\bundle/msi/game-of-life-app_*_x64.msi
